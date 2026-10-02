@@ -1,0 +1,294 @@
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
+
+:root {
+  font-family: "Manrope", Arial, sans-serif;
+  color: #f5f2e9;
+  background: #090909;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(ellipse at 50% -30%, #242014 0, transparent 48%),
+    #090909;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.shell {
+  max-width: 1120px;
+  margin: auto;
+  padding: 0 28px;
+}
+
+.topbar {
+  height: 78px;
+  border-bottom: 1px solid #29261d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #b99742;
+  color: #d8b65d;
+  font-weight: 800;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+  letter-spacing: 0.13em;
+}
+
+.brand strong {
+  font-size: 13px;
+}
+
+.brand small {
+  font: 9px "DM Mono", monospace;
+  color: #bca45e;
+  margin-top: 3px;
+}
+
+.connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 10px "DM Mono", monospace;
+  letter-spacing: 0.07em;
+  color: #a5a092;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #777;
+}
+
+.status-dot.connected {
+  background: #d1ac4c;
+}
+
+.status-dot.error {
+  background: #c65a50;
+}
+
+.intro {
+  padding: 66px 0 34px;
+}
+
+.eyebrow {
+  font: 10px "DM Mono", monospace;
+  letter-spacing: 0.18em;
+  color: #c6a34b;
+}
+
+.intro h1 {
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  margin: 12px 0;
+}
+
+.intro h1 span {
+  color: #c8a64d;
+}
+
+.subtitle {
+  color: #a8a49a;
+  font-size: 14px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid #29261d;
+}
+
+.filters {
+  display: flex;
+  gap: 5px;
+}
+
+.filters button {
+  background: transparent;
+  color: #969186;
+  border: 1px solid transparent;
+  padding: 9px 13px;
+  font: 11px "DM Mono", monospace;
+  cursor: pointer;
+}
+
+.filters button.active {
+  border-color: #5a4a25;
+  color: #e2c36e;
+  background: #17140e;
+}
+
+.toolbar input {
+  width: 220px;
+  max-width: 45%;
+  padding: 10px 12px;
+  background: #10100e;
+  border: 1px solid #302d25;
+  color: #eee;
+  font: 11px "DM Mono", monospace;
+  outline: none;
+}
+
+.toolbar input:focus {
+  border-color: #a8893e;
+}
+
+.watchlist {
+  border: 1px solid #29261d;
+  min-height: 300px;
+}
+
+.table-head,
+.asset-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.3fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 18px;
+}
+
+.table-head {
+  font: 9px "DM Mono", monospace;
+  letter-spacing: 0.12em;
+  color: #8e897c;
+  background: #10100e;
+  border-bottom: 1px solid #29261d;
+}
+
+.asset-row {
+  font: 12px "DM Mono", monospace;
+  border-bottom: 1px solid #1e1d19;
+  color: #c6c1b5;
+}
+
+.asset-row strong {
+  color: #f5f2e9;
+  font-weight: 500;
+}
+
+.right {
+  text-align: right;
+}
+
+.up {
+  color: #68b78a;
+}
+
+.down {
+  color: #d56e63;
+}
+
+.empty {
+  min-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 32px;
+}
+
+.empty-icon {
+  color: #b99849;
+  font-size: 25px;
+  margin-bottom: 14px;
+}
+
+.empty strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.empty p {
+  max-width: 410px;
+  color: #8f8b81;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 9px 0 0;
+}
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 0;
+  color: #706c62;
+  font: 9px "DM Mono", monospace;
+  letter-spacing: 0.07em;
+}
+
+@media (max-width: 600px) {
+  .shell {
+    padding: 0 16px;
+  }
+
+  .intro {
+    padding: 48px 0 28px;
+  }
+
+  .intro h1 {
+    max-width: 360px;
+  }
+
+  .subtitle {
+    line-height: 1.6;
+  }
+
+  .table-head,
+  .asset-row {
+    grid-template-columns: 1.5fr 0.7fr 1.2fr 1fr;
+    padding: 13px 10px;
+    font-size: 10px;
+  }
+
+  .table-head {
+    font-size: 8px;
+  }
+
+  .toolbar input {
+    width: 145px;
+  }
+
+  .filters button {
+    padding: 8px 7px;
+    font-size: 10px;
+  }
+
+  footer {
+    font-size: 8px;
+    flex-direction: column;
+  }
+}
