@@ -1,0 +1,2 @@
+# Pinned to the exact commit whose source was inspected and verified.
+git+https://github.com/chema-creator/PocketOptionApi.git@5b7418a51f577732a4e7f7aeeecf969610bda3cb
