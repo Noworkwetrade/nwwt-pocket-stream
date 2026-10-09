@@ -1,76 +1,79 @@
-# NWWT Signal Desk — Pocket Option scanner
+# NWWT Pocket Stream
 
-Two processes:
+Pocket Option market watch frontend plus a separate Python bridge and Node scanner.
 
-- **`bridge/po_bridge.py`** (Python) owns the Pocket Option connection through
-  [chema-creator/PocketOptionApi](https://github.com/chema-creator/PocketOptionApi),
-  pinned to commit `5b7418a`. It reads `POCKET_OPTION_SSID`, proves the
-  connection, and serves sanitized results on `127.0.0.1` only.
-- **`server.js`** (Node) is the existing scanner. It polls the bridge and feeds
-  real candles into its existing candle pipeline. The strategy code is unchanged.
+## How the pieces fit together
 
-No frame, method name or auth format in this project is invented: the bridge
-calls only the library's own `PocketOption` interface.
+- `src/` is the React frontend built by Vite
+- `server.js` runs the scanner API on port 3000 and serves the built frontend from `dist/`
+- `bridge/po_bridge.py` owns the Pocket Option connection and exposes sanitized data only on `127.0.0.1:8765`
+- The scanner remains stopped until the bridge proves authentication, websocket connection, time sync, real assets, a fresh real tick, and a verified one minute candle
 
-## Run
+## Setup
 
+Use three terminals from the repository root.
+
+### 1. Install dependencies and configure the frontend
+
+```bash
+npm install
+cp .env.example .env
 ```
-python3 -m venv .venv && . .venv/bin/activate
+
+Put the complete Pocket Option SSID in `.env` as the value of `POCKET_OPTION_SSID`. Do not commit `.env`.
+
+### 2. Start the Python bridge
+
+```python
+python3 -m venv .venv
+```
+
+Activate the environment, then install the pinned library and start the bridge:
+
+```bash
 pip install -r bridge/requirements.txt
-cp .env.example .env        # then put your SSID in .env (single-quoted)
-python bridge/po_bridge.py  # terminal 1
-npm install && npm start    # terminal 2, then open http://localhost:3000
+python bridge/po_bridge.py
 ```
 
-The SSID must be the **complete** `42["auth",{"session":...,"isDemo":...,"uid":...}]`
-string. The library does not validate it (a malformed one silently becomes an
-empty demo session), so the bridge refuses to connect unless `session`,
-`isDemo` and `uid` are present.
+### 3. Start the Node API
 
-## When it counts as connected
+```bash
+npm start
+```
 
-The scanner stays stopped, and `/api/state` reports `connected: false`, until
-the bridge proves all six:
+This starts the API and scanner server at `http://localhost:3000`. Build the frontend first for production:
 
-| Proof | Source |
+```bash
+npm run build
+npm start
+```
+
+### Development mode
+
+Keep the Node API and Python bridge running, then run `npm run dev` in another terminal. Vite serves the frontend on port 5173 and proxies `/api` requests to the Node server on port 3000.
+
+## Connection verification
+
+The scanner stays stopped and `/api/state` reports `connected: false` until all six checks pass:
+
+| Check | Evidence |
 |---|---|
-| authenticated | `check_connect()`, true only after the server's `successauth` |
-| websocket connected | the library's underlying websocket reports OPEN |
-| time synchronized | `is_time_synced()` |
-| real asset count > 0 | `get_assets()` |
-| real tick received | `get_realtime_ticks()` on a subscribed asset, newer than 60s |
-| real 1 minute candle received | `get_historical_candles(asset, 60)`, spacing verified as 60s |
+| Authenticated | The library confirms the server's `successauth` |
+| Websocket connected | The underlying websocket reports OPEN |
+| Time synchronized | The library reports synchronized time |
+| Real asset catalog | The live catalog contains assets |
+| Real tick | A subscribed asset has a fresh tick |
+| Real one minute candle | Historical candles have verified 60 second spacing |
 
-Check it directly: `curl http://127.0.0.1:8765/state`. It also reports
-authentication status, websocket status, time sync, real asset count, active
-subscriptions, last tick and candle timestamps, last received asset,
-reconnect count and the last authentication error. If the SSID is invalid or
-expired, the library's own message is shown and the bridge stops; it does not
-retry or try another protocol. Restart the bridge after fixing the SSID.
+Inspect bridge status locally at `http://127.0.0.1:8765/state`.
 
 ## Assets
 
-The bridge reads the real catalog from `get_assets()`, keeps the symbols ending
-in `_otc` that are `is_available`, and subscribes to each at a 60 second
-period, a few at a time. It re-reads the catalog every 30 seconds and drops
-assets that stop being available. Symbols are never invented and there is no
-fallback list.
+The bridge reads the live catalog from the library, keeps available symbols ending in `_otc`, and subscribes in small batches. It does not invent symbols or use a fallback list. The existing scanner evaluates one asset at a time: set `SCANNER_ASSET` to an available OTC symbol or leave it unset to select the available asset with the highest reported payout.
 
-The existing scanner reads one flat candle stream, so it is fed **one**
-asset: `SCANNER_ASSET` if set, otherwise the available OTC asset with the
-highest payout. Other assets are subscribed and tick-tracked but not scanned.
+## Security and limitations
 
-## Notes
-
-- Candle and tick timestamps are the library's "server-native" times, passed
-  through unconverted (the library documents these as typically UTC+2).
-- The bridge never returns the SSID from `/state`, `/candles` or `/ticks`. It is
-  removed from the process environment after it is read, library INFO/DEBUG
-  logging is silenced (the library logs the start of its auth message at INFO),
-  and all logs and responses are redacted. Do not set DEBUG logging.
-- Not verified from the build environment, so confirm on your machine: live
-  behaviour with the full OTC list subscribed, and the library with
-  `websockets` 17 (it was written for 12/13). If a live run errors in the
-  connect layer, pin an older `websockets`.
-- The library's tick handler stores only the first entry of each `updateStream`
-  message; the per-asset tick proof shows which assets actually stream.
+- The bridge binds to loopback only; do not expose its port publicly
+- The SSID is read by the bridge, removed from its process environment, and redacted from logs and responses
+- This needs a persistent host that can run both Python and Node processes. A static frontend host alone, including a standard static Vercel deployment, cannot keep this bridge alive
+- Live Pocket Option connectivity has not been certified by this repository update; verify it with an authorized session before relying on the feed
