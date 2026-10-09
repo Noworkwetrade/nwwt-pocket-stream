@@ -41,12 +41,14 @@ python bridge/po_bridge.py
 npm start
 ```
 
-This starts the API and scanner server at `http://localhost:3000`. Build the frontend first for production:
+For a production run, build the frontend before starting the server:
 
 ```bash
 npm run build
 npm start
 ```
+
+Then open `http://localhost:3000`. If the build has not been created, the server returns a clear setup message instead of a 404.
 
 ### Development mode
 
