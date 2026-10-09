@@ -224,7 +224,16 @@ function publicState() {
   };
 }
 
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon'
+};
+const DIST_DIR = path.join(__dirname, 'dist');
 
 const server = http.createServer((req, res) => {
   if (req.url === '/api/state') {
@@ -255,11 +264,45 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const filePath = path.join(__dirname, 'public', req.url === '/' ? '/index.html' : req.url);
+  // The frontend is built by Vite into /dist. Do not serve source JSX directly.
+  if (!fs.existsSync(path.join(DIST_DIR, 'index.html'))) {
+    res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Frontend is not built yet. Run npm run build, then npm start.');
+    return;
+  }
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    res.writeHead(400);
+    res.end('Bad request');
+    return;
+  }
+  const requestedPath = pathname === '/' ? 'index.html' : pathname.replace(/^\\/+/, '');
+  const filePath = path.resolve(DIST_DIR, requestedPath);
+  if (filePath !== DIST_DIR && !filePath.startsWith(DIST_DIR + path.sep)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
   fs.readFile(filePath, (err, data) => {
-    if (err) { res.writeHead(404); res.end('Not found'); return; }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });
-    res.end(data);
+    if (!err) {
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });
+      res.end(data);
+      return;
+    }
+    // Vite SPA fallback: unknown client routes should load index.html.
+    fs.readFile(path.join(DIST_DIR, 'index.html'), (indexErr, indexData) => {
+      if (indexErr) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': MIME['.html'] });
+      res.end(indexData);
+    });
   });
 });
 
